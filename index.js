@@ -66,6 +66,13 @@ app.post('/jeopardy', function (request, response) {
                 json_response_for_slack(response, reply);
             })
 
+        } else if (post_text.startsWith("help")) {
+            json_response_for_slack(response,
+                '"j start" to get a new question. You will have 30 seconds.\n'
+                + '"j [your answer]" to answer the current question\n'
+                + '"j leaderboard" to see the current leaderboard'
+            );
+
         } else {
             process_answer(post, function (reply) {
                 json_response_for_slack(response, reply);
@@ -300,7 +307,7 @@ function respond_with_leaderboard(post, callback) {
         }
 
         // sort
-        leaderboard = leaderboard.sort(function(a, b){return a.score > b.score});
+        leaderboard = leaderboard.sort(function(a, b){return a.score < b.score});
 
         console.log(leaderboard);
 
