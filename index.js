@@ -158,7 +158,9 @@ function get_a_question(callback) {
                 q_data.answer = q_data.answer
                     .replace(/\s+(&nbsp;|&)\s+/i, " and ")
                     .replace(/<(?:.|\n)*?>/gm, '')
-                    .replace(/["]+/g, '');
+                    .replace(/ *\([^)]*\) */g, "")
+                    .replace(/["]+/g, '')
+                    .trim();
                 callback(q_data)
             }
 
