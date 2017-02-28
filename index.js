@@ -311,8 +311,6 @@ function respond_with_leaderboard(post, callback) {
         // sort
         leaderboard = leaderboard.sort(function(a, b){return a.score < b.score});
 
-        console.log(leaderboard);
-
         var leaderboard_text = "";
 
         // format text
