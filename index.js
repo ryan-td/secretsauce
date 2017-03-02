@@ -214,7 +214,7 @@ function process_answer(post, callback) {
 
                             // update name and number of answers total
                             user_obj.user_name = post.user_name;
-                            user_obj.n_answers += 1;
+                            user_obj.n_answers = (user_obj.n_answers || 0) + 1;
 
                             // check that the question is correct
                             if (is_correct_answer(question.answer, current_answer)) {
@@ -225,7 +225,7 @@ function process_answer(post, callback) {
 
                                 // update user score
                                 user_obj.score += question.value;
-                                user_obj.n_correct += 1;
+                                user_obj.n_correct = (user_obj.n_correct || 0) + 1;
 
                                 // update user
                                 database.ref('jeopardy/leaderboard/' + post.user_id).set(user_obj);
