@@ -174,9 +174,10 @@ function process_answer(post, callback) {
 
     database.ref('jeopardy/status').once('value').then(function (snapshot) {
 
-        // check state ready OR previous state is SECONDS_TO_ANSWER seconds away
+        // check state WAITING
         if ((snapshot.val().state == 'WAITING FOR ANSWER')) {
 
+            // get current question
             database.ref('jeopardy/current_question').once('value').then(function (snapshot) {
                 var question = snapshot.val();
                 var current_answer = post.text.replace(post.trigger_word, '').trim();
@@ -186,6 +187,7 @@ function process_answer(post, callback) {
 
                     // check that the question has not expired
                     if (Date.now() > question.expiration) {
+
                         if (is_correct_answer(question.answer, current_answer)) {
                             callback(
                                 "That is correct, " + post.user_name + ", but time's up! Remember, you have "
@@ -200,55 +202,64 @@ function process_answer(post, callback) {
                         }
                     } else {
 
-                        // check that the question is correct
-                        if (is_correct_answer(question.answer, current_answer)) {
+                        // get current user
+                        database.ref('jeopardy/leaderboard/' + post.user_id).once('value').then(function (snapshot) {
 
-                            // mark as answered
-                            question.answered = true;
-                            database.ref('jeopardy/current_question').set(question);
-
-                            // get current score
-                            database.ref('jeopardy/leaderboard/' + post.user_id).once('value').then(function (snapshot) {
-                                var user_score = (snapshot.val() || {
+                            var user_obj = (snapshot.val() || {
                                     user_name: post.user_name,
-                                    score: 0
+                                    score: 0,
+                                    n_answers: 0,
+                                    n_correct: 0
                                 });
 
-                                // update score and current name
-                                user_score.score += question.value;
-                                user_score.user_name = post.user_name;
-                                database.ref('jeopardy/leaderboard/' + post.user_id).set(user_score);
+                            // update name and number of answers total
+                            user_obj.user_name = post.user_name;
+                            user_obj.n_answers += 1;
+
+                            // check that the question is correct
+                            if (is_correct_answer(question.answer, current_answer)) {
+
+                                // mark as answered
+                                question.answered = true;
+                                database.ref('jeopardy/current_question').set(question);
+
+                                // update user score
+                                user_obj.score += question.value;
+                                user_obj.n_correct += 1;
+
+                                // update user
+                                database.ref('jeopardy/leaderboard/' + post.user_id).set(user_obj);
+
+                                // reset status
+                                database.ref('jeopardy/status').set({
+                                    state: 'READY',
+                                    timestamp: Date.now()
+                                });
 
                                 // respond
                                 callback(question.answer + " is the correct answer, " + post.user_name
-                                    + ". Your total score is now " + user_score.score)
+                                    + ". Your total score is now " + user_obj.score);
 
-                            });
+                            } else {
 
-                            // set status
-                            database.ref('jeopardy/status').set({
-                                state: 'READY',
-                                timestamp: Date.now()
-                            });
+                                // update user, respond with nothing
+                                database.ref('jeopardy/leaderboard/' + post.user_id).set(user_obj);
+                                callback("");
 
-                        } else {
-                            callback("")
-                        }
+                            }
+
+                        });
 
                     }
 
                 } else {
-
                     callback("")
-
                 }
 
             });
 
         } else {
-
             callback("")
-
         }
     });
 
