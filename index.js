@@ -326,7 +326,15 @@ function respond_with_leaderboard(post, callback) {
 
         // format text
         for (var i=0; i<leaderboard.length; i++){
-            leaderboard_text += leaderboard[i]['user_name'] + ": " + leaderboard[i]['score'] + "\n"
+
+            // build accuracy text
+            var accuracy = "";
+            if (leaderboard[i]['n_correct']) {
+                accuracy = 100 * leaderboard[i]['n_correct'] / leaderboard[i]['n_answers'];
+                accuracy = " (" + parseInt(accuracy) + "%" + (i ? "" : " accuracy") + ")";
+            }
+
+            leaderboard_text += leaderboard[i]['user_name'] + ": " + leaderboard[i]['score'] + accuracy + "\n"
         }
 
         callback(leaderboard_text)
