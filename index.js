@@ -293,7 +293,10 @@ function is_correct_answer(official_answer, user_answer) {
     user_answer = sanitize_text(user_answer);
 
     // get lev ratio
-    var lev = levenshtein.get(official_answer, user_answer);
+    var lev = Math.min(
+        levenshtein.get(official_answer, user_answer),
+        levenshtein.get(official_answer, user_answer+"s") // handle plurals
+    );
     var lev_ratio = lev / official_answer.length;
 
     // return whether it's similar enough
